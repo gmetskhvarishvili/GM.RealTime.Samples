@@ -14,6 +14,10 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="GM.RealTime.Sample.API/GM.RealTime.Sample.API.csproj" />
+    <Project Path="GM.RealTime.Sample.Domain/GM.RealTime.Sample.Domain.csproj" />
+    <Project Path="GM.RealTime.Sample.Persistence/GM.RealTime.Sample.Persistence.csproj" />
+    <Project Path="GM.RealTime.Sample.Consumer.Worker/GM.RealTime.Sample.Consumer.Worker.csproj" />
+    <Project Path="GM.RealTime.Sample.Sender.Worker/GM.RealTime.Sample.Sender.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/GM.RealTime.Sample.Tests/GM.RealTime.Sample.Tests.csproj" />

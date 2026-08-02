@@ -1,24 +1,39 @@
 using System.Security.Claims;
 using System.Text;
+using GM.Caching.Redis;
+using GM.DistributedLock.Redis;
+using GM.Messaging;
 using GM.RealTime;
 using GM.RealTime.Domain;
 using GM.RealTime.Sample.API;
+using GM.RealTime.Sample.Domain.Events;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using Wolverine;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var jwt = builder.Configuration.GetSection("Jwt");
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
+var redis = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
 
-// GM.RealTime: SignalR + presence registry (cache + distributed lock) + the access_token handshake.
-// In-memory backends by default; register AddGMRedisCaching/AddGMRedisDistributedLock first for
-// cross-node presence (see the README).
-builder.Services.AddGMRealTime(o => o.HubPath = "/hubs/realtime");
+// Redis-backed presence registry, shared with the sender worker.
+builder.Services.AddGMRedisCaching(o => o.ConnectionString = redis);
+builder.Services.AddGMRedisDistributedLock(o => o.ConnectionString = redis);
 
-// JWT bearer as GM.Identity would set it up. GM.RealTime plugs the access_token query string into
-// this same validation for the WebSocket handshake.
+// GM.RealTime: SignalR + presence + the JWT handshake, with the Redis backplane so a send from any
+// instance (or the sender worker) reaches this instance's connected clients.
+builder.Services.AddGMRealTime(o =>
+{
+    o.HubPath = "/hubs/realtime";
+    o.RedisBackplaneConnectionString = redis;
+});
+
+// GM.Messaging producer — the /queue endpoint publishes the "queued" event to RabbitMQ.
+builder.Services.AddGMMessaging(builder.Configuration);
+
+// JWT bearer as GM.Identity would set it up; GM.RealTime plugs the access_token query string in.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -56,7 +71,15 @@ app.MapPost("/dev/token/{userId}", (string userId) =>
     return Results.Ok(new { token });
 });
 
-// Push a message to a user — delivered only if they're online (presence-aware).
+// Enqueue a real-time message: publishes to RabbitMQ. The consumer worker ingests it into the inbox
+// and the sender worker delivers it — demonstrating the full GM.Messaging -> inbox -> SignalR flow.
+app.MapPost("/queue/{userId:guid}", async (Guid userId, QueueRequest request, IMessageBus bus) =>
+{
+    await bus.PublishAsync(new RealTimeMessageQueuedIntegrationEvent(request.Title, request.Body) { UserId = userId });
+    return Results.Accepted();
+});
+
+// Direct push (bypasses the queue) to a user if online — presence-aware.
 app.MapPost("/notify/{userId}", async (string userId, NotifyRequest request, UserNotifier notifier) =>
 {
     var delivered = await notifier.NotifyIfOnlineAsync(userId, request.Event, request.Payload);
@@ -76,3 +99,4 @@ app.MapGMRealTimeHub().RequireAuthorization();
 app.Run();
 
 internal sealed record NotifyRequest(string Event, object? Payload);
+internal sealed record QueueRequest(string Title, string Body);

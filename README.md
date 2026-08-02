@@ -7,53 +7,103 @@
 [![CI](https://github.com/gmetskhvarishvili/GM.RealTime.Samples/actions/workflows/ci.yml/badge.svg)](https://github.com/gmetskhvarishvili/GM.RealTime.Samples/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A minimal ASP.NET Core Web API that shows
-**[GM.RealTime](https://www.nuget.org/packages/GM.RealTime)** end to end: a JWT-authenticated
-SignalR hub, **presence-aware** server→client push through `IRealTimeSender`, and presence lookups
-via the shared connection registry. Targets **.NET 10**.
+A **multi-instance, message-driven** real-time sample built on
+**[GM.RealTime](https://www.nuget.org/packages/GM.RealTime)**. It shows the full pipeline: a message
+is published to **RabbitMQ (GM.Messaging)**, a **consumer worker** saves it to an **inbox**, and a
+separate **sender worker** delivers it to the right browser over SignalR — across processes, via the
+**Redis backplane**. Targets **.NET 10**.
 
-## What it demonstrates
+## The pipeline
 
-- `AddGMRealTime()` + `MapGMRealTimeHub()` — the whole real-time stack in two calls.
-- **JWT WebSocket handshake**: the hub requires auth, and the token is read from
-  `?access_token=…` (the sample mints dev tokens so you can try it).
-- **Presence-aware delivery**: `UserNotifier.NotifyIfOnlineAsync` pushes only when the user has a
-  live connection (using `IConnectionRegistry.IsOnlineAsync`), and reports delivered/skipped.
-- Presence queries backed by the shared registry (`GM.Caching` + `GM.DistributedLock`).
+```
+POST /queue/{userId}         (GM.RealTime.Sample.API, GM.Messaging producer)
+        │  publish RealTimeMessageQueuedIntegrationEvent
+        ▼
+   RabbitMQ  (exchange gm.events, routing key realtime.message.queued)
+        │
+        ▼
+GM.RealTime.Sample.Consumer.Worker   (Wolverine handler → IInboxProcessor.IngestAsync)
+        │  saves an unprocessed row
+        ▼
+   Inbox table  (Postgres, GM.Messaging inbox schema)
+        │
+        ▼
+GM.RealTime.Sample.Sender.Worker     (polls inbox → IRealTimeSender.SendToUserAsync)
+        │  delivers if the user is online, marks processed
+        ▼
+   SignalR Redis backplane → the API instance holding the user's connection → browser
+```
 
-## Endpoints
+Because the sender worker holds **no connections of its own**, delivery only reaches the browser
+thanks to two shared pieces of GM.RealTime: the **Redis-backed connection registry** (it looks up
+where the user is connected) and the **SignalR Redis backplane** (it routes the message there). This
+is the multi-instance story end to end.
+
+## Projects
+
+```
+GM.RealTime.Sample.API/              # SignalR hub (JWT), presence, /queue producer, /notify, dev token
+GM.RealTime.Sample.Domain/           # RealTimeMessageQueuedIntegrationEvent (GM.Messaging)
+GM.RealTime.Sample.Persistence/      # InboxDbContext + InboxStore (GM.Messaging inbox over EF/Npgsql)
+GM.RealTime.Sample.Consumer.Worker/  # Wolverine consumer → IngestAsync into the inbox
+GM.RealTime.Sample.Sender.Worker/    # polls the inbox → IRealTimeSender (Redis backplane)
+tests/GM.RealTime.Sample.Tests/      # xUnit: presence-aware notify + inbox dispatch (no infra needed)
+```
+
+## Endpoints (API)
 
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `POST` | `/dev/token/{userId}` | Dev-only: mint a JWT for `userId` to connect the SignalR client |
-| `POST` | `/notify/{userId}` | Push `{ event, payload }` to the user if online (returns `delivered`) — requires auth |
+| `POST` | `/queue/{userId}` | Publish a message `{ title, body }` into the pipeline (RabbitMQ → inbox → SignalR) |
+| `POST` | `/notify/{userId}` | Direct presence-aware push (bypasses the queue) — requires auth |
 | `GET` | `/presence/{userId}` | Whether the user is online and how many connections they have |
 | (hub) | `/hubs/realtime` | The SignalR hub (requires a valid JWT) |
 
-## Running
+## Running the whole thing
+
+Needs **Redis**, **RabbitMQ**, and **PostgreSQL**:
+
+```bash
+docker run -p 6379:6379 -d redis
+docker run -p 5672:5672 -p 15672:15672 -d rabbitmq:management
+docker run -e POSTGRES_PASSWORD=123456 -p 5432:5432 -d postgres
+```
+
+Then, in three terminals:
 
 ```bash
 dotnet run --project GM.RealTime.Sample.API
+dotnet run --project GM.RealTime.Sample.Consumer.Worker
+dotnet run --project GM.RealTime.Sample.Sender.Worker
 ```
 
-By default it uses the in-memory cache + lock (single process). For presence shared across nodes,
-register the Redis backends before `AddGMRealTime` (see the GM.RealTime README) and run Redis:
-`docker run -p 6379:6379 -d redis`.
+Connect a browser client (see the snippet below) as, say, user
+`11111111-1111-1111-1111-111111111111`, then:
 
-### Connecting a browser client
+```bash
+curl -X POST http://localhost:5xxx/queue/11111111-1111-1111-1111-111111111111 \
+  -H "Content-Type: application/json" -d '{"title":"Hello","body":"from the pipeline"}'
+```
+
+The message travels API → RabbitMQ → consumer → inbox → sender → your browser. Run **two** API
+instances on different ports and the backplane still delivers to whichever one holds the connection.
+
+### Browser client (with reconnect)
 
 ```js
 import * as signalR from "@microsoft/signalr";
 
-const { token } = await (await fetch("/dev/token/alice", { method: "POST" })).json();
+const { token } = await (await fetch("/dev/token/11111111-1111-1111-1111-111111111111", { method: "POST" })).json();
 
 const connection = new signalR.HubConnectionBuilder()
   .withUrl("/hubs/realtime", { accessTokenFactory: () => token })
+  .withAutomaticReconnect()
+  .withStatefulReconnect()   // resume + replay across brief drops
   .build();
 
 connection.on("ReceiveMessage", m => console.log(m.event, m.payload));
 await connection.start();
-// now POST /notify/alice { "event": "ping", "payload": { "hi": true } } and watch it arrive
 ```
 
 ## Testing
@@ -62,8 +112,8 @@ await connection.start();
 dotnet test
 ```
 
-The tests drive `UserNotifier` with the real in-memory connection registry and a recording sender,
-asserting that messages go out only to online users — no SignalR host or Redis required.
+The tests drive the **inbox dispatcher** (with a recording sender) and the **presence-aware notifier**
+(with the real in-memory registry) — no Redis, RabbitMQ, or Postgres required.
 
 ## License
 

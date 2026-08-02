@@ -10,9 +10,10 @@
     <ItemGroup>
         <PackageReference Include="GM.Caching" Version="1.0.0" />
         <PackageReference Include="GM.DistributedLock" Version="1.0.0" />
-        <PackageReference Include="GM.RealTime.Persistence" Version="1.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+        <PackageReference Include="GM.Messaging.Domain" Version="1.2.0" />
+        <PackageReference Include="GM.RealTime.Persistence" Version="1.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.10" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
         <PackageReference Include="xunit" Version="2.9.2" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -23,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\GM.RealTime.Sample.API\GM.RealTime.Sample.API.csproj" />
+        <ProjectReference Include="..\..\GM.RealTime.Sample.Sender.Worker\GM.RealTime.Sample.Sender.Worker.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Worker">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -7,17 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- Hub, IRealTimeSender, the cache-backed registry, the JWT handshake, and the backplane. -->
+        <!-- GM.RealTime brings IRealTimeSender + the connection registry; the SignalR Redis backplane
+             (configured below) lets this headless worker reach clients connected to the API. -->
         <PackageReference Include="GM.RealTime" Version="1.1.0" />
-        <!-- Redis backends so presence + fan-out are shared with the sender worker. -->
         <PackageReference Include="GM.Caching.Redis" Version="1.0.0" />
         <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.0" />
-        <!-- Publish the "queued" event to RabbitMQ for the consumer worker. -->
-        <PackageReference Include="GM.Messaging" Version="1.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GM.RealTime.Sample.Domain\GM.RealTime.Sample.Domain.csproj" />
+        <ProjectReference Include="..\GM.RealTime.Sample.Persistence\GM.RealTime.Sample.Persistence.csproj" />
     </ItemGroup>
 
 </Project>
