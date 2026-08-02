@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Brings the hub, IRealTimeSender, the cache-backed registry, and the JWT handshake. -->
+        <PackageReference Include="GM.RealTime" Version="1.0.0" />
+    </ItemGroup>
+
+</Project>
