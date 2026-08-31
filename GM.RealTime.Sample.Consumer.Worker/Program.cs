@@ -18,4 +18,4 @@ using (var scope = app.Services.CreateScope())
     await context.Database.EnsureCreatedAsync();
 }
 
-app.Run();
+await app.RunAsync();

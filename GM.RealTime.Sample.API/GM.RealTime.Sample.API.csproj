@@ -10,10 +10,13 @@
         <!-- Hub, IRealTimeSender, the cache-backed registry, the JWT handshake, and the backplane. -->
         <PackageReference Include="GM.RealTime" Version="1.1.0" />
         <!-- Redis backends so presence + fan-out are shared with the sender worker. -->
-        <PackageReference Include="GM.Caching.Redis" Version="1.0.0" />
-        <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.0" />
+        <PackageReference Include="GM.Caching.Redis" Version="1.0.1" />
+        <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.2" />
         <!-- Publish the "queued" event to RabbitMQ for the consumer worker. -->
-        <PackageReference Include="GM.Messaging" Version="1.2.0" />
+        <PackageReference Include="GM.Messaging" Version="1.2.1" />
+        <!-- Pin transitive MessagePack (pulled in by Microsoft.AspNetCore.SignalR.StackExchangeRedis via
+             GM.RealTime) above the vulnerable 2.5.187 line; GHSA-hv8m-jj95-wg3x and related advisories. -->
+        <PackageReference Include="MessagePack" Version="3.1.8" />
     </ItemGroup>
 
     <ItemGroup>

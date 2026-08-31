@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="GM.Messaging.Domain" Version="1.2.0" />
-        <PackageReference Include="WolverineFx" Version="6.24.2" />
+        <PackageReference Include="GM.Messaging.Domain" Version="1.2.1" />
+        <PackageReference Include="WolverineFx" Version="6.31.0" />
     </ItemGroup>
 
 </Project>

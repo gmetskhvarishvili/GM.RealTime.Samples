@@ -16,7 +16,7 @@ separate **sender worker** delivers it to the right browser over SignalR — acr
 ## The pipeline
 
 ```
-POST /queue/{userId}         (GM.RealTime.Sample.API, GM.Messaging producer)
+POST /api/v1/queue/{userId}  (GM.RealTime.Sample.API, GM.Messaging producer)
         │  publish RealTimeMessageQueuedIntegrationEvent
         ▼
    RabbitMQ  (exchange gm.events, routing key realtime.message.queued)
@@ -42,7 +42,7 @@ is the multi-instance story end to end.
 ## Projects
 
 ```
-GM.RealTime.Sample.API/              # SignalR hub (JWT), presence, /queue producer, /notify, dev token
+GM.RealTime.Sample.API/              # SignalR hub (JWT), presence, /api/v1/queue producer, /notify, dev token
 GM.RealTime.Sample.Domain/           # RealTimeMessageQueuedIntegrationEvent (GM.Messaging)
 GM.RealTime.Sample.Persistence/      # InboxDbContext + InboxStore (GM.Messaging inbox over EF/Npgsql)
 GM.RealTime.Sample.Consumer.Worker/  # Wolverine consumer → IngestAsync into the inbox
@@ -54,11 +54,13 @@ tests/GM.RealTime.Sample.Tests/      # xUnit: presence-aware notify + inbox disp
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `POST` | `/dev/token/{userId}` | Dev-only: mint a JWT for `userId` to connect the SignalR client |
-| `POST` | `/queue/{userId}` | Publish a message `{ title, body }` into the pipeline (RabbitMQ → inbox → SignalR) |
-| `POST` | `/notify/{userId}` | Direct presence-aware push (bypasses the queue) — requires auth |
-| `GET` | `/presence/{userId}` | Whether the user is online and how many connections they have |
+| `POST` | `/api/v1/dev/token/{userId}` | Dev-only: mint a JWT for `userId` to connect the SignalR client |
+| `POST` | `/api/v1/queue/{userId}` | Publish a message `{ title, body }` into the pipeline (RabbitMQ → inbox → SignalR) |
+| `POST` | `/api/v1/notify/{userId}` | Direct presence-aware push (bypasses the queue) — requires auth |
+| `GET` | `/api/v1/presence/{userId}` | Whether the user is online and how many connections they have |
 | (hub) | `/hubs/realtime` | The SignalR hub (requires a valid JWT) |
+| `GET` | `/health/live` | Liveness probe (no downstream checks) |
+| `GET` | `/health/ready` | Readiness probe |
 
 ## Running the whole thing
 
@@ -82,7 +84,7 @@ Connect a browser client (see the snippet below) as, say, user
 `11111111-1111-1111-1111-111111111111`, then:
 
 ```bash
-curl -X POST http://localhost:5xxx/queue/11111111-1111-1111-1111-111111111111 \
+curl -X POST http://localhost:5xxx/api/v1/queue/11111111-1111-1111-1111-111111111111 \
   -H "Content-Type: application/json" -d '{"title":"Hello","body":"from the pipeline"}'
 ```
 
@@ -94,7 +96,7 @@ instances on different ports and the backplane still delivers to whichever one h
 ```js
 import * as signalR from "@microsoft/signalr";
 
-const { token } = await (await fetch("/dev/token/11111111-1111-1111-1111-111111111111", { method: "POST" })).json();
+const { token } = await (await fetch("/api/v1/dev/token/11111111-1111-1111-1111-111111111111", { method: "POST" })).json();
 
 const connection = new signalR.HubConnectionBuilder()
   .withUrl("/hubs/realtime", { accessTokenFactory: () => token })

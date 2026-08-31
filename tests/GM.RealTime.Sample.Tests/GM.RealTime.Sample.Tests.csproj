@@ -5,18 +5,26 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+
+        <!--
+          Documented analyzer exception for test code only (see Directory.Build.props for the
+          baseline that turns warnings into errors), because it conflicts with a test convention
+          rather than flagging a defect:
+            CA1707 - the mandated test name style is Method_Scenario_ExpectedResult, which uses underscores.
+        -->
+        <NoWarn>$(NoWarn);CA1707</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="GM.Caching" Version="1.0.0" />
-        <PackageReference Include="GM.DistributedLock" Version="1.0.0" />
-        <PackageReference Include="GM.Messaging.Domain" Version="1.2.0" />
+        <PackageReference Include="GM.Caching" Version="1.0.1" />
+        <PackageReference Include="GM.DistributedLock" Version="1.0.2" />
+        <PackageReference Include="GM.Messaging.Domain" Version="1.2.1" />
         <PackageReference Include="GM.RealTime.Persistence" Version="1.1.0" />
-        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.10" />
-        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.10" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-        <PackageReference Include="xunit" Version="2.9.2" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+        <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.11" />
+        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.11" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+        <PackageReference Include="xunit" Version="2.9.3" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
