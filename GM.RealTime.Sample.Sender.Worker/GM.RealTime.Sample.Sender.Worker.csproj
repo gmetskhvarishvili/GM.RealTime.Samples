@@ -10,9 +10,12 @@
         <!-- GM.RealTime brings IRealTimeSender + the connection registry; the SignalR Redis backplane
              (configured below) lets this headless worker reach clients connected to the API. -->
         <PackageReference Include="GM.RealTime" Version="1.1.0" />
-        <PackageReference Include="GM.Caching.Redis" Version="1.0.0" />
-        <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
+        <PackageReference Include="GM.Caching.Redis" Version="1.0.1" />
+        <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+        <!-- Pin transitive MessagePack (pulled in by Microsoft.AspNetCore.SignalR.StackExchangeRedis via
+             GM.RealTime) above the vulnerable 2.5.187 line; GHSA-hv8m-jj95-wg3x and related advisories. -->
+        <PackageReference Include="MessagePack" Version="3.1.8" />
     </ItemGroup>
 
     <ItemGroup>

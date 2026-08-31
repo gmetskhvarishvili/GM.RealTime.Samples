@@ -13,15 +13,15 @@ public class InboxDispatcherTests
     {
         public List<(string UserId, string Event, object? Payload)> Sends { get; } = [];
 
-        public Task SendToUserAsync(string userId, string @event, object? payload, CancellationToken ct = default)
+        public Task SendToUserAsync(string userId, string @event, object? payload, CancellationToken cancellationToken = default)
         {
             Sends.Add((userId, @event, payload));
             return Task.CompletedTask;
         }
 
-        public Task SendToConnectionAsync(string connectionId, string @event, object? payload, CancellationToken ct = default) => Task.CompletedTask;
-        public Task SendToGroupAsync(string group, string @event, object? payload, CancellationToken ct = default) => Task.CompletedTask;
-        public Task SendToAllAsync(string @event, object? payload, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SendToConnectionAsync(string connectionId, string @event, object? payload, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task SendToGroupAsync(string group, string @event, object? payload, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task SendToAllAsync(string @event, object? payload, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private static InboxMessage InboxRowFor(Guid userId, string title, string body)

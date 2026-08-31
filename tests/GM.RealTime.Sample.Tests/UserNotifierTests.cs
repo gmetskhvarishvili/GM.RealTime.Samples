@@ -17,15 +17,15 @@ public class UserNotifierTests
     {
         public List<(string UserId, string Event)> UserSends { get; } = [];
 
-        public Task SendToUserAsync(string userId, string @event, object? payload, CancellationToken ct = default)
+        public Task SendToUserAsync(string userId, string @event, object? payload, CancellationToken cancellationToken = default)
         {
             UserSends.Add((userId, @event));
             return Task.CompletedTask;
         }
 
-        public Task SendToConnectionAsync(string connectionId, string @event, object? payload, CancellationToken ct = default) => Task.CompletedTask;
-        public Task SendToGroupAsync(string group, string @event, object? payload, CancellationToken ct = default) => Task.CompletedTask;
-        public Task SendToAllAsync(string @event, object? payload, CancellationToken ct = default) => Task.CompletedTask;
+        public Task SendToConnectionAsync(string connectionId, string @event, object? payload, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task SendToGroupAsync(string group, string @event, object? payload, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task SendToAllAsync(string @event, object? payload, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private static (UserNotifier Notifier, IConnectionRegistry Registry, RecordingSender Sender) Build()

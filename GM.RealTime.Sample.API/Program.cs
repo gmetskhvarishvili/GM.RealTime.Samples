@@ -6,8 +6,10 @@ using GM.Messaging;
 using GM.RealTime;
 using GM.RealTime.Domain;
 using GM.RealTime.Sample.API;
+using GM.RealTime.Sample.API.Contracts;
 using GM.RealTime.Sample.Domain.Events;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Wolverine;
@@ -50,14 +52,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<UserNotifier>();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Liveness must not depend on downstream dependencies, so it runs no checks; readiness runs
+// every registered health check (none here yet). See engineering baseline §11.
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready");
+
+var api = app.MapGroup("/api/v1");
+
 // Dev-only helper: mint a token for a userId so a SignalR client can connect as that user.
-app.MapPost("/dev/token/{userId}", (string userId) =>
+api.MapPost("/dev/token/{userId}", (string userId) =>
 {
     var descriptor = new SecurityTokenDescriptor
     {
@@ -73,21 +83,21 @@ app.MapPost("/dev/token/{userId}", (string userId) =>
 
 // Enqueue a real-time message: publishes to RabbitMQ. The consumer worker ingests it into the inbox
 // and the sender worker delivers it — demonstrating the full GM.Messaging -> inbox -> SignalR flow.
-app.MapPost("/queue/{userId:guid}", async (Guid userId, QueueRequest request, IMessageBus bus) =>
+api.MapPost("/queue/{userId:guid}", async (Guid userId, QueueRequest request, IMessageBus bus) =>
 {
     await bus.PublishAsync(new RealTimeMessageQueuedIntegrationEvent(request.Title, request.Body) { UserId = userId });
     return Results.Accepted();
 });
 
 // Direct push (bypasses the queue) to a user if online — presence-aware.
-app.MapPost("/notify/{userId}", async (string userId, NotifyRequest request, UserNotifier notifier) =>
+api.MapPost("/notify/{userId}", async (string userId, NotifyRequest request, UserNotifier notifier) =>
 {
     var delivered = await notifier.NotifyIfOnlineAsync(userId, request.Event, request.Payload);
     return Results.Ok(new { userId, delivered });
 }).RequireAuthorization();
 
 // Presence lookup backed by the shared connection registry.
-app.MapGet("/presence/{userId}", async (string userId, IConnectionRegistry registry) =>
+api.MapGet("/presence/{userId}", async (string userId, IConnectionRegistry registry) =>
 {
     var presence = await registry.GetPresenceAsync(userId);
     return Results.Ok(new { userId, presence.IsOnline, connections = presence.ConnectionIds.Count });
@@ -96,7 +106,4 @@ app.MapGet("/presence/{userId}", async (string userId, IConnectionRegistry regis
 // The real-time hub, mapped at RealTimeOptions.HubPath and requiring a valid JWT.
 app.MapGMRealTimeHub().RequireAuthorization();
 
-app.Run();
-
-internal sealed record NotifyRequest(string Event, object? Payload);
-internal sealed record QueueRequest(string Title, string Body);
+await app.RunAsync();
