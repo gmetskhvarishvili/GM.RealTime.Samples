@@ -12,7 +12,7 @@ public static class DependencyInjection
     public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<InboxDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("ApplicationDatabase")));
+            options.UseNpgsql(configuration.GetConnectionString("ApplicationDatabase")).UseSnakeCaseNamingConvention());
 
         services.AddScoped<IInboxStore<InboxMessage>, InboxStore>();
         services.AddGMInboxProcessor<InboxMessage>();
