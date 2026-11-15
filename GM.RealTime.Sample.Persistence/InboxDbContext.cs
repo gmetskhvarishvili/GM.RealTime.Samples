@@ -12,6 +12,6 @@ public sealed class InboxDbContext(DbContextOptions<InboxDbContext> options) : D
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Reuse GM.Messaging's inbox mapping (keyed on EventId + ConsumerName).
-        modelBuilder.ApplyConfiguration(new InboxMessageConfiguration<InboxMessage>("realtime"));
+        modelBuilder.ApplyConfiguration(new InboxMessageConfiguration<InboxMessage>("messaging"));
     }
 }
