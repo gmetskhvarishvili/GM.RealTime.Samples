@@ -44,7 +44,7 @@ is the multi-instance story end to end.
 ```
 GM.RealTime.Sample.API/              # SignalR hub (JWT), presence, /api/v1/queue producer, /notify, dev token
 GM.RealTime.Sample.Domain/           # RealTimeMessageQueuedIntegrationEvent (GM.Messaging)
-GM.RealTime.Sample.Persistence/      # InboxDbContext + InboxStore (GM.Messaging inbox over EF/Npgsql)
+GM.RealTime.Sample.Persistence/      # InboxDbContext + AddGMInbox (GM.Messaging's EF Core inbox store, Npgsql)
 GM.RealTime.Sample.Consumer.Worker/  # Wolverine consumer → IngestAsync into the inbox
 GM.RealTime.Sample.Sender.Worker/    # polls the inbox → IRealTimeSender (Redis backplane)
 tests/GM.RealTime.Sample.Tests/      # xUnit: presence-aware notify + inbox dispatch (no infra needed)
