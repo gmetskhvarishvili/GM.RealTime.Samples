@@ -8,7 +8,7 @@
 
     <ItemGroup>
         <!-- Hub, IRealTimeSender, the cache-backed registry, the JWT handshake, and the backplane. -->
-        <PackageReference Include="GM.RealTime" Version="1.1.0" />
+        <PackageReference Include="GM.RealTime" Version="1.1.2" />
         <!-- Redis backends so presence + fan-out are shared with the sender worker. -->
         <PackageReference Include="GM.Caching.Redis" Version="1.0.1" />
         <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.2" />
