@@ -25,7 +25,7 @@ POST /api/v1/queue/{userId}  (GM.RealTime.Sample.API, GM.Messaging producer)
 GM.RealTime.Sample.Consumer.Worker   (Wolverine handler → IInboxProcessor.IngestAsync)
         │  saves an unprocessed row
         ▼
-   Inbox table  (Postgres, GM.Messaging inbox schema)
+   Inbox table  (Postgres, messaging.inbox_messages)
         │
         ▼
 GM.RealTime.Sample.Sender.Worker     (polls inbox → IRealTimeSender.SendToUserAsync)
@@ -79,6 +79,10 @@ dotnet run --project GM.RealTime.Sample.API
 dotnet run --project GM.RealTime.Sample.Consumer.Worker
 dotnet run --project GM.RealTime.Sample.Sender.Worker
 ```
+
+The workers create the inbox table on startup with `EnsureCreated`, in the `messaging` schema. If you
+have a database from before the inbox moved there (its table is `realtime.inbox_messages`), drop it
+first. `EnsureCreated` leaves an existing database untouched.
 
 Connect a browser client (see the snippet below) as, say, user
 `11111111-1111-1111-1111-111111111111`, then:
