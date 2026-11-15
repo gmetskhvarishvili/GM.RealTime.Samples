@@ -1,6 +1,5 @@
 using GM.Messaging.Domain.Inbox;
 using GM.Messaging.Persistence;
-using GM.Messaging.Persistence.Inbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +13,7 @@ public static class DependencyInjection
         services.AddDbContext<InboxDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("ApplicationDatabase")).UseSnakeCaseNamingConvention());
 
-        services.AddScoped<IInboxStore<InboxMessage>, InboxStore>();
-        services.AddGMInboxProcessor<InboxMessage>();
+        services.AddGMInbox<InboxMessage, InboxDbContext>();
 
         return services;
     }
