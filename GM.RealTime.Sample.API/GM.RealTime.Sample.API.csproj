@@ -13,7 +13,7 @@
         <PackageReference Include="GM.Caching.Redis" Version="1.0.1" />
         <PackageReference Include="GM.DistributedLock.Redis" Version="1.0.2" />
         <!-- Publish the "queued" event to RabbitMQ for the consumer worker. -->
-        <PackageReference Include="GM.Messaging" Version="1.3.0" />
+        <PackageReference Include="GM.Messaging" Version="1.3.1" />
         <!-- Pin transitive MessagePack (pulled in by Microsoft.AspNetCore.SignalR.StackExchangeRedis via
              GM.RealTime) above the vulnerable 2.5.187 line; GHSA-hv8m-jj95-wg3x and related advisories. -->
         <PackageReference Include="MessagePack" Version="3.1.12" />
