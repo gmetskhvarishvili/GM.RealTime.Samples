@@ -11,4 +11,4 @@ namespace GM.RealTime.Sample.Domain.Events;
 // The alias keeps the RabbitMQ message-type header stable across services (Wolverine resolves the
 // local type from it), so publishers and consumers don't need to share the .NET type name.
 [MessageIdentity("realtime.message.queued")]
-public sealed record RealTimeMessageQueuedIntegrationEvent(string Title, string Body) : IntegrationEvent;
+public sealed record RealTimeMessageQueuedIntegrationEvent(string Title, [property: SensitiveData] string Body) : IntegrationEvent;

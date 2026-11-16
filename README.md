@@ -90,6 +90,10 @@ queue bound for them are kept instead of dropped. RabbitMQ won't redeclare an ex
 argument: on a broker that already has the sample's exchanges, delete them once (the services recreate
 them when they start).
 
+A queued message's `Body` is `[SensitiveData]` (GM.Messaging 4.4): it crosses RabbitMQ encrypted and the
+consumer gets the plain text. The API and the consumer share the key ring in `Messaging:SensitiveData` (a
+sample key in appsettings; use a secret store in production).
+
 Connect a browser client (see the snippet below) as, say, user
 `11111111-1111-1111-1111-111111111111`, then:
 

@@ -1,3 +1,4 @@
+using GM.Messaging.Persistence.Protection;
 using GM.Messaging;
 using GM.RealTime.Sample.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,8 @@ var builder = Host.CreateApplicationBuilder(args);
 // GM.Messaging (Wolverine + RabbitMQ) discovers the Handle method in this assembly and delivers
 // each consumed RealTimeMessageQueuedIntegrationEvent to it.
 builder.Services.AddGMMessaging(builder.Configuration);
+// RealTimeMessageQueued's Body is [SensitiveData]: encrypted on RabbitMQ (key ring in Messaging:SensitiveData).
+builder.Services.AddGMSensitiveData(builder.Configuration);
 builder.Services.AddPersistence(builder.Configuration);
 
 var app = builder.Build();
