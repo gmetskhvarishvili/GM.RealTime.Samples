@@ -18,7 +18,7 @@
     <ItemGroup>
         <PackageReference Include="GM.Caching" Version="1.2.0" />
         <PackageReference Include="GM.DistributedLock" Version="1.2.0" />
-        <PackageReference Include="GM.Messaging.Domain" Version="4.0.0" />
+        <PackageReference Include="GM.Messaging.Domain" Version="4.2.0" />
         <PackageReference Include="GM.RealTime.Persistence" Version="1.1.2" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.15" />
         <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.15" />
