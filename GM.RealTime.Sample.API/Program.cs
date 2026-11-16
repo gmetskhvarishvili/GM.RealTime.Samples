@@ -1,3 +1,4 @@
+using GM.Messaging.Persistence.Protection;
 using System.Security.Claims;
 using System.Text;
 using GM.Caching.Redis;
@@ -34,6 +35,8 @@ builder.Services.AddGMRealTime(o =>
 
 // GM.Messaging producer — the /queue endpoint publishes the "queued" event to RabbitMQ.
 builder.Services.AddGMMessaging(builder.Configuration);
+// RealTimeMessageQueued's Body is [SensitiveData]: encrypted on RabbitMQ (key ring in Messaging:SensitiveData).
+builder.Services.AddGMSensitiveData(builder.Configuration);
 
 // JWT bearer as GM.Identity would set it up; GM.RealTime plugs the access_token query string in.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
