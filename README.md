@@ -85,6 +85,11 @@ have a database from before the inbox moved there (its table is `realtime.inbox_
 created before GM.Messaging 3.0 (its `inbox_messages` lacks columns such as `attempts`, `ingested` or
 `event_version`), drop it first. `EnsureCreated` leaves an existing database untouched.
 
+GM.Messaging 4.0 declares each exchange with the alternate exchange `gm.unrouted`, so messages with no
+queue bound for them are kept instead of dropped. RabbitMQ won't redeclare an existing exchange with a new
+argument: on a broker that already has the sample's exchanges, delete them once (the services recreate
+them when they start).
+
 Connect a browser client (see the snippet below) as, say, user
 `11111111-1111-1111-1111-111111111111`, then:
 
