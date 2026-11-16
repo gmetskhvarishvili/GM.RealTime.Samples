@@ -82,8 +82,8 @@ dotnet run --project GM.RealTime.Sample.Sender.Worker
 
 The workers create the inbox table on startup with `EnsureCreated`, in the `messaging` schema. If you
 have a database from before the inbox moved there (its table is `realtime.inbox_messages`), or one
-created before GM.Messaging 2.0 (its `inbox_messages` lacks columns such as `attempts` and
-`ingested`), drop it first. `EnsureCreated` leaves an existing database untouched.
+created before GM.Messaging 3.0 (its `inbox_messages` lacks columns such as `attempts`, `ingested` or
+`event_version`), drop it first. `EnsureCreated` leaves an existing database untouched.
 
 Connect a browser client (see the snippet below) as, say, user
 `11111111-1111-1111-1111-111111111111`, then:
